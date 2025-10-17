@@ -1,0 +1,33 @@
+# Source files
+src/
+test/
+examples/
+
+# Config files
+tsconfig.json
+tsconfig.test.json
+vitest.config.ts
+vitest.setup.ts
+.eslintrc.json
+
+# Development files
+*.test.ts
+*.spec.ts
+.vscode/
+.idea/
+
+# Build artifacts
+*.tsbuildinfo
+
+# Documentation (keep README.md)
+docs/
+
+# Lock files
+bun.lockb
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Environment
+.env
+.env.*

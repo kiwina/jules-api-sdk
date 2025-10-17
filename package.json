@@ -1,0 +1,53 @@
+{
+  "name": "@kiwina/jules-api-sdk",
+  "version": "2025.10.2",
+  "description": "Node.js client for the Jules API (SDK) — typed, validated, and tested",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "bun run build && bun run test --run",
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:run": "vitest --run",
+    "lint": "eslint src/**/*.ts",
+    "example": "bun run examples/example.ts",
+    "clean": "rm -rf dist",
+    "prepack": "bun run clean && bun run build"
+  },
+  "keywords": [
+    "jules",
+    "api",
+    "automation",
+    "development",
+    "github"
+  ],
+  "author": "Jules AI",
+  "license": "MIT",
+  "homepage": "https://github.com/kiwina/jules-api-sdk",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kiwina/jules-api-sdk.git"
+  },
+  "devDependencies": {
+    "@types/node": "24.8.0",
+    "@typescript-eslint/eslint-plugin": "8.46.1",
+    "@typescript-eslint/parser": "8.46.1",
+    "eslint": "9.37.0",
+    "msw": "2.11.5",
+    "typescript": "^5.1.0",
+    "vitest": "3.2.4"
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "zod": "4.1.12"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
