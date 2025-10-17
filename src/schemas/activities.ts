@@ -32,7 +32,10 @@ export const ArtifactSchema = z.object({
   changeSet: ChangeSetSchema.optional(),
   media: MediaSchema.optional(),
   bashOutput: BashOutputSchema.optional(),
-});
+}).refine(
+  (data) => data.changeSet || data.media || data.bashOutput,
+  { message: "Artifact must have at least one of changeSet, media, or bashOutput" }
+);
 
 // Plan step schema
 export const PlanStepSchema = z.object({

@@ -450,5 +450,24 @@ describe('JulesClient', () => {
       const result = await client.getActivity('sess1', 'bad');
       expect(result).toBeDefined();
     });
+
+    it('should reject Artifact with no content', async () => {
+      const invalidActivity = {
+        name: 'sessions/sess1/activities/bad',
+        id: 'bad',
+        description: 'Invalid',
+        createTime: '2025-10-17T10:00:00Z',
+        originator: 'agent',
+        progressUpdated: { title: 'Invalid artifact' },
+        artifacts: [
+          {}, // Empty artifact object
+        ],
+      };
+
+      mockAxiosInstance.get.mockResolvedValue({ data: invalidActivity });
+      const client = new JulesClient({ apiKey: 'test-key' });
+
+      await expect(client.getActivity('sess1', 'bad')).rejects.toThrow();
+    });
   });
 });
