@@ -38,3 +38,4 @@ yarn-error.log*
 # Temporary files
 *.tmp
 tmp/
+jules_api_docs

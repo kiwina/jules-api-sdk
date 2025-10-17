@@ -26,21 +26,16 @@ export const MediaSchema = z.object({
   mimeType: z.string().optional(),
 });
 
-// Discriminated union for Artifact content
-export const ArtifactSchema = z.discriminatedUnion('_artifactType', [
-  z.object({
-    _artifactType: z.literal('changeSet'),
-    changeSet: ChangeSetSchema,
-  }),
-  z.object({
-    _artifactType: z.literal('media'),
-    media: MediaSchema,
-  }),
-  z.object({
-    _artifactType: z.literal('bashOutput'),
-    bashOutput: BashOutputSchema,
-  }),
-]);
+// Artifact schema - uses optional fields pattern to match API behavior
+// An artifact must contain at least one type of content
+export const ArtifactSchema = z.object({
+  changeSet: ChangeSetSchema.optional(),
+  media: MediaSchema.optional(),
+  bashOutput: BashOutputSchema.optional(),
+}).refine(
+  (data) => data.changeSet || data.media || data.bashOutput,
+  { message: "Artifact must have at least one of: changeSet, media, or bashOutput" }
+);
 
 // Plan step schema
 export const PlanStepSchema = z.object({
@@ -85,47 +80,33 @@ export const SessionFailedSchema = z.object({
   reason: z.string().optional(),
 });
 
-// Discriminated union for Activity types
-const ActivityUnionSchema = z.discriminatedUnion('_activityType', [
-  z.object({
-    _activityType: z.literal('agentMessaged'),
-    agentMessaged: AgentMessagedSchema,
-  }),
-  z.object({
-    _activityType: z.literal('userMessaged'),
-    userMessaged: UserMessagedSchema,
-  }),
-  z.object({
-    _activityType: z.literal('planGenerated'),
-    planGenerated: PlanGeneratedSchema,
-  }),
-  z.object({
-    _activityType: z.literal('planApproved'),
-    planApproved: PlanApprovedSchema,
-  }),
-  z.object({
-    _activityType: z.literal('progressUpdated'),
-    progressUpdated: ProgressUpdatedSchema,
-  }),
-  z.object({
-    _activityType: z.literal('sessionCompleted'),
-    sessionCompleted: SessionCompletedSchema,
-  }),
-  z.object({
-    _activityType: z.literal('sessionFailed'),
-    sessionFailed: SessionFailedSchema,
-  }),
-]);
+// Activity content schema - uses optional fields pattern to match API behavior
+// The API returns activity data as optional fields where only one is expected to be present
+const ActivityContentSchema = z.object({
+  agentMessaged: AgentMessagedSchema.optional(),
+  userMessaged: UserMessagedSchema.optional(),
+  planGenerated: PlanGeneratedSchema.optional(),
+  planApproved: PlanApprovedSchema.optional(),
+  progressUpdated: ProgressUpdatedSchema.optional(),
+  sessionCompleted: SessionCompletedSchema.optional(),
+  sessionFailed: SessionFailedSchema.optional(),
+});
 
-// Complete Activity schema with required base fields and discriminated union
+// Complete Activity schema with required base fields
+// An activity must have at least one content field (agentMessaged, userMessaged, etc.)
 export const ActivitySchema = z.object({
   name: z.string(),
   id: z.string(),
-  description: z.string(),
+  description: z.string().optional(), // API may omit description
   createTime: z.string(),
   originator: z.string(),
   artifacts: z.array(ArtifactSchema).optional(),
-}).and(ActivityUnionSchema);
+}).and(ActivityContentSchema).refine(
+  (data) => data.agentMessaged || data.userMessaged || data.planGenerated || 
+            data.planApproved || data.progressUpdated || data.sessionCompleted || 
+            data.sessionFailed,
+  { message: "Activity must have at least one content field (agentMessaged, userMessaged, planGenerated, etc.)" }
+);
 
 export const ListActivitiesResponseSchema = z.object({
   activities: z.array(ActivitySchema).optional(),

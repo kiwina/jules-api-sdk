@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project uses **Semantic Versioning** (MAJOR.MINOR.PATCH).
 
+## [1.0.1] - 2025-10-17
+
+### Fixed
+- **CRITICAL**: Fixed validation schema bug that prevented SDK from working with real API responses
+- Removed incorrect `_activityType` discriminator field from Activity schema (API doesn't provide this field)
+- Removed incorrect `_artifactType` discriminator field from Artifact schema (API doesn't provide this field)
+- Made `description` field optional in Activity schema to match actual API behavior
+- Changed from discriminated unions to optional fields pattern with validation refinements
+- Added comprehensive real-world payload tests to prevent regressions
+
+#### Technical Details
+The original v1.0.0 schemas used Zod discriminated unions expecting `_activityType` and `_artifactType` fields that the actual Jules API does not return. This caused all `listActivities()` and `getActivity()` calls to fail validation. The fix:
+
+1. Replaced discriminated unions with optional fields pattern
+2. Added `refine()` validation to ensure at least one content field is present
+3. Made `description` optional to match API's actual behavior
+4. Updated all tests to reflect real API response structure
+
+This resolves [Issue #1](https://github.com/kiwina/jules-api-sdk/issues/1).
+
 ## [1.0.0] - 2025-10-17
 
 ### Initial Release
@@ -83,4 +103,5 @@ When releasing a new version:
 
 ---
 
+[1.0.1]: https://github.com/kiwina/jules-api-sdk/releases/tag/v1.0.1
 [1.0.0]: https://github.com/kiwina/jules-api-sdk/releases/tag/v1.0.0
