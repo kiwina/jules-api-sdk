@@ -18,7 +18,8 @@
     "lint": "eslint src/**/*.ts",
     "example": "bun run examples/example.ts",
     "clean": "rm -rf dist",
-    "prepack": "bun run clean && bun run build"
+    "prepack": "bun run clean && bun run build",
+    "publish:manual": "bash scripts/publish-manual.sh"
   },
   "keywords": [
     "jules",
@@ -35,7 +36,7 @@
     "url": "git+https://github.com/kiwina/jules-api-sdk.git"
   },
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
+    "access": "public"
   },
   "devDependencies": {
     "@types/node": "24.8.0",

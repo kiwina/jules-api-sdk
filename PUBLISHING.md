@@ -1,227 +1,161 @@
 # Publishing Guide
 
+## 🚀 Quick Start (Recommended)
+
+Publish to **both npm and GitHub Packages** locally:
+
+```bash
+# One-time setup
+npm login
+export GITHUB_TOKEN=ghp_your_token_here  # From: https://github.com/settings/tokens
+
+# Every release (builds locally, publishes to both)
+bun run publish:manual
+```
+
+✅ Done! The script handles: clean → build → test → publish (npm + GitHub) → tag
+
+---
+
 ## Prerequisites
 
-1. **npm account**: Create one at https://www.npmjs.com/signup
-2. **npm login**: Run `npm login` to authenticate (Bun uses npm registry)
-3. **Build passing**: All tests must pass
-4. **Version bump**: Update version in `package.json`
+1. **npm account**: https://www.npmjs.com/signup
+2. **GitHub token** (for GitHub Packages):
+   - Create at: https://github.com/settings/tokens
+   - Permission needed: `write:packages`
+   - Export: `export GITHUB_TOKEN=ghp_your_token`
 
-## Pre-publish Checklist
+---
 
-- [ ] All tests passing (`bun run test --run`)
-- [ ] Build successful (`bun run build`)
-- [ ] README.md is up-to-date
-- [ ] CHANGELOG.md updated with changes
-- [ ] Version bumped in `package.json`
-- [ ] Git committed and tagged
+## Publishing Workflow
 
-## Publishing Steps
-
-### 1. Clean and Build
+### Every Release:
 
 ```bash
-bun run clean
-bun run build
-```
-
-### 2. Run Tests
-
-```bash
-bun run test:run
-```
-
-### 3. Verify Package Contents
-
-```bash
-bun pm pack --dry-run
-```
-
-This shows what will be included in the published package.
-
-### 4. Version Bump
-
-Follow semantic versioning (MAJOR.MINOR.PATCH):
-
-```bash
-# For patch releases (bug fixes):
-npm version patch
-
-# For minor releases (new features, backwards compatible):
-npm version minor
-
-# For major releases (breaking changes):
-npm version major
-
-# Or manually edit package.json:
-# "version": "1.0.0"
-```
-
-### 5. Publish to npm
-
-```bash
-# For stable releases (recommended)
-bun publish
-
-# For beta releases (testing new API version)
-bun publish --tag beta
-
-# Alternative: use npm publish (also works)
-npm publish
-```
-
-### 6. Push to Git
-
-```bash
-git push origin main --tags
-```
-
-## Version Guidelines
-
-This SDK uses **Semantic Versioning (SemVer)** following the standard MAJOR.MINOR.PATCH format:
-
-- **Format**: `MAJOR.MINOR.PATCH` (e.g., `1.0.0`, `1.1.0`, `2.0.0`)
-- **MAJOR**: Breaking changes to the API
-- **MINOR**: New features, backwards compatible
-- **PATCH**: Bug fixes and internal improvements
-
-### Version Strategy
-
-```bash
-# Patch release (bug fixes, no new features):
-npm version patch  # 1.0.0 -> 1.0.1
-
-# Minor release (new features, backwards compatible):
-npm version minor  # 1.0.1 -> 1.1.0
-
-# Major release (breaking changes):
-npm version major  # 1.1.0 -> 2.0.0
-```
-
-### Examples
-
-- `1.0.0` - Initial stable release
-- `1.0.1` - Bug fix, no API changes
-- `1.1.0` - New features added (e.g., new endpoints)
-- `2.0.0` - Breaking changes (e.g., API redesign)
-
-## Current Status
-
-**Version**: 1.0.0  
-**API Based On**: Jules API v1alpha (Last updated 2025-10-02 UTC)  
-**Status**: ✅ Ready for release  
-**Quality**: A+ (100%)
-
-The SDK is production-ready with:
-- Complete API coverage (9/9 endpoints)
-- Full type safety (discriminated unions)
-- Runtime validation (Zod schemas)
-- Comprehensive tests (21/21 passing)
-- Production features (retry, timeout, logging)
-
-## First Release Commands
-
-```bash
-# Verify everything works
-bun run clean
-bun run build
-bun run test:run
-
-# Version is set to 1.0.0 in package.json
-
-# Publish stable release
-npm publish
-
-# Push to git
+# 1. Update CHANGELOG.md with changes
+# 2. Commit your changes
 git add .
-git commit -m "Release v1.0.0"
-git tag v1.0.0
-git push origin main --tags
+git commit -m "feat: add new feature"
+git push origin main
+
+# 3. Publish to both registries
+bun run publish:manual
 ```
 
-## Future Updates
+The script automatically:
+- Checks npm authentication
+- Cleans and builds
+- Runs all tests
+- Publishes to npm (with provenance)
+- Publishes to GitHub Packages
+- Creates and pushes git tag
 
-When updating the SDK:
+**Uses 0 GitHub Actions minutes** - everything runs locally!
 
+---
+
+## Manual Steps (if needed)
+
+<details>
+<summary>Click to expand manual publishing steps</summary>
+
+### 1. Update version
 ```bash
-# 1. Make your changes to the codebase
-#    - Update src/client.ts and src/schemas/ as needed
-#    - Add/update tests in test/
-#    - Update README.md and examples if needed
+# Edit package.json manually, or:
+npm version patch   # 1.0.0 -> 1.0.1
+npm version minor   # 1.0.0 -> 1.1.0
+npm version major   # 1.0.0 -> 2.0.0
+```
 
-# 2. Run tests to verify everything works
-bun run clean && bun run build && bun run test:run
+### 2. Build and test
+```bash
+bun run clean
+bun run build
+bun run test:run
+```
 
-# 3. Update CHANGELOG.md with changes
+### 3. Publish to npm
+```bash
+npm publish --provenance --access public
+```
 
-# 4. Bump version appropriately
-npm version patch   # for bug fixes (1.0.0 -> 1.0.1)
-npm version minor   # for new features (1.0.0 -> 1.1.0)
-npm version major   # for breaking changes (1.0.0 -> 2.0.0)
-
-# 5. Publish to npm
+### 4. Publish to GitHub Packages
+```bash
+npm config set registry https://npm.pkg.github.com/
+npm config set //npm.pkg.github.com/:_authToken "$GITHUB_TOKEN"
 npm publish
-
-# 6. Push to git (npm version already creates a commit and tag)
-git push origin main --tags
+npm config set registry https://registry.npmjs.org/
+npm config delete //npm.pkg.github.com/:_authToken
 ```
 
-## Automated Publishing (CI/CD)
-
-Add to `.github/workflows/publish.yml`:
-
-```yaml
-name: Publish to npm
-
-on:
-  release:
-    types: [created]
-
-jobs:
-  publish:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: oven-sh/setup-bun@v1
-      - run: bun install
-      - run: bun run build
-      - run: bun run test:run
-      - uses: JS-DevTools/npm-publish@v2
-        with:
-          token: ${{ secrets.NPM_TOKEN }}
+### 5. Tag and push
+```bash
+VERSION=$(node -p "require('./package.json').version")
+git tag "v$VERSION"
+git push origin "v$VERSION"
 ```
 
-## Post-publish Verification
+</details>
+
+---
+
+## Why Both Registries?
+
+| Aspect | npm | GitHub Packages |
+|--------|-----|-----------------|
+| **Discoverability** | ✅ Public search | ❌ Need repo link |
+| **Installation** | ✅ No auth | ⚠️ Requires auth |
+| **Best for** | Public packages | Private/org use |
+
+---
+
+## Version Strategy
+
+**Semantic Versioning (SemVer)**: `MAJOR.MINOR.PATCH`
+
+- `1.0.0` - Initial release
+- `1.0.1` - Bug fixes
+- `1.1.0` - New features (backwards compatible)
+- `2.0.0` - Breaking changes
+
+---
+
+## Installation (for users)
 
 ```bash
-# Install from npm with Bun
-bun add @kiwina/jules-api-sdk
-
-# Or with npm
+# From npm (most common, no auth)
 npm install @kiwina/jules-api-sdk
 
-# Verify it works
-node -e "const {JulesClient} = require('@kiwina/jules-api-sdk'); console.log('✅ Package works!')"
-
-# Or with Bun
-bun -e "import {JulesClient} from '@kiwina/jules-api-sdk'; console.log('✅ Package works!')"
+# From GitHub Packages (requires GitHub auth)
+npm install @kiwina/jules-api-sdk --registry=https://npm.pkg.github.com
 ```
+
+---
 
 ## Troubleshooting
 
-### Package already exists
-- Bump version in `package.json`
-- Ensure you have publish rights to `@kiwina` scope
+```bash
+# Not logged into npm?
+npm login
 
-### Tests failing
-- Run `bun run test:run` locally
-- Fix failing tests before publishing
+# Missing GITHUB_TOKEN?
+export GITHUB_TOKEN=ghp_your_token
 
-### Build errors
-- Run `bun run clean && bun run build`
-- Check TypeScript errors in output
+# Tests failing?
+bun run test:run
 
-## Support
+# Build errors?
+bun run clean && bun run build
+```
 
-For issues, create a GitHub issue at:
-https://github.com/kiwina/jules-api-sdk/issues
+---
+
+## GitHub Actions (Optional)
+
+A workflow exists at `.github/workflows/publish.yml` for automated publishing, but since you prefer building locally, you can ignore or delete it.
+
+If you want to use it: `git tag v1.0.0 && git push origin v1.0.0`
+
+---
+
+**Support:** https://github.com/kiwina/jules-api-sdk/issues
