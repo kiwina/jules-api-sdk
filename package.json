@@ -1,6 +1,6 @@
 {
   "name": "@kiwina/jules-api-sdk",
-  "version": "2025.10.2",
+  "version": "1.0.0",
   "description": "Node.js client for the Jules API (SDK) — typed, validated, and tested",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

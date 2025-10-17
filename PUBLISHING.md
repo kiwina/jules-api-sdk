@@ -41,21 +41,20 @@ This shows what will be included in the published package.
 
 ### 4. Version Bump
 
-When Jules API docs are updated, check the "Last updated" timestamp and update `package.json`:
+Follow semantic versioning (MAJOR.MINOR.PATCH):
 
 ```bash
-# API docs show: "Last updated 2025-10-15 UTC"
-# Update package.json version to: "2025.10.15"
+# For patch releases (bug fixes):
+npm version patch
 
-# For SDK patches (no API change):
-# version: "2025.10.2-patch.1"
-# version: "2025.10.2-patch.2"
-```
+# For minor releases (new features, backwards compatible):
+npm version minor
 
-Manual edit in `package.json` or use npm:
+# For major releases (breaking changes):
+npm version major
 
-```bash
-npm version 2025.10.15 --no-git-tag-version
+# Or manually edit package.json:
+# "version": "1.0.0"
 ```
 
 ### 5. Publish to npm
@@ -79,33 +78,37 @@ git push origin main --tags
 
 ## Version Guidelines
 
-This SDK uses **CalVer (Calendar Versioning)** based on the Jules API documentation timestamp:
+This SDK uses **Semantic Versioning (SemVer)** following the standard MAJOR.MINOR.PATCH format:
 
-- **Format**: `YYYY.MM.DD` (e.g., `2025.10.2` for API updated 2025-10-02)
-- **Rationale**: Google only provides "Last updated" timestamp, no semantic versions
-- **Updates**: When Google updates the API docs, bump the SDK version to match
+- **Format**: `MAJOR.MINOR.PATCH` (e.g., `1.0.0`, `1.1.0`, `2.0.0`)
+- **MAJOR**: Breaking changes to the API
+- **MINOR**: New features, backwards compatible
+- **PATCH**: Bug fixes and internal improvements
 
 ### Version Strategy
 
 ```bash
-# When Jules API docs are updated to 2025-10-15:
-# Update version in package.json to: 2025.10.15
+# Patch release (bug fixes, no new features):
+npm version patch  # 1.0.0 -> 1.0.1
 
-# For patch releases (SDK fixes, no API changes):
-# Add patch suffix: 2025.10.2-patch.1, 2025.10.2-patch.2, etc.
+# Minor release (new features, backwards compatible):
+npm version minor  # 1.0.1 -> 1.1.0
+
+# Major release (breaking changes):
+npm version major  # 1.1.0 -> 2.0.0
 ```
 
 ### Examples
 
-- `2025.10.2` - Based on API docs updated 2025-10-02
-- `2025.10.2-patch.1` - Bug fix, API unchanged
-- `2025.11.5` - Based on API docs updated 2025-11-05
-- `2025.11.5-beta.1` - Beta release for new API version
+- `1.0.0` - Initial stable release
+- `1.0.1` - Bug fix, no API changes
+- `1.1.0` - New features added (e.g., new endpoints)
+- `2.0.0` - Breaking changes (e.g., API redesign)
 
 ## Current Status
 
-**Version**: 2025.10.2  
-**API Docs Date**: 2025-10-02 UTC  
+**Version**: 1.0.0  
+**API Based On**: Jules API v1alpha (Last updated 2025-10-02 UTC)  
 **Status**: ✅ Ready for release  
 **Quality**: A+ (100%)
 
@@ -124,54 +127,42 @@ bun run clean
 bun run build
 bun run test:run
 
-# Version is already set to 2025.10.2 in package.json
+# Version is set to 1.0.0 in package.json
 
 # Publish stable release
-bun publish
+npm publish
 
 # Push to git
-git add package.json
-git commit -m "Release v2025.10.2"
-git tag v2025.10.2
+git add .
+git commit -m "Release v1.0.0"
+git tag v1.0.0
 git push origin main --tags
 ```
 
 ## Future Updates
 
-When Google updates the Jules API docs:
+When updating the SDK:
 
 ```bash
-# 1. Check API docs for new "Last updated" date
-#    Example: "Last updated 2025-11-15 UTC"
-#    Visit: https://developers.google.com/jules/api
-
-# 2. Review changes in API documentation
-#    - Check for new endpoints or parameters
-#    - Review any breaking changes
-#    - Note deprecated features
-
-# 3. Update SDK code if needed
+# 1. Make your changes to the codebase
 #    - Update src/client.ts and src/schemas/ as needed
 #    - Add/update tests in test/
-#    - Update README.md and examples
+#    - Update README.md and examples if needed
 
-# 4. Update version in package.json
-#    "version": "2025.11.15"
-
-# 5. Update README.md with new date
-#    **SDK Version:** 2025.11.15 (based on Jules API last updated 2025-11-15 UTC)
-
-# 6. Update CHANGELOG.md
-#    Add new version section with changes
-
-# 7. Run tests and publish
+# 2. Run tests to verify everything works
 bun run clean && bun run build && bun run test:run
-bun publish
 
-# 8. Tag and push
-git add .
-git commit -m "Release v2025.11.15 - API updated"
-git tag v2025.11.15
+# 3. Update CHANGELOG.md with changes
+
+# 4. Bump version appropriately
+npm version patch   # for bug fixes (1.0.0 -> 1.0.1)
+npm version minor   # for new features (1.0.0 -> 1.1.0)
+npm version major   # for breaking changes (1.0.0 -> 2.0.0)
+
+# 5. Publish to npm
+npm publish
+
+# 6. Push to git (npm version already creates a commit and tag)
 git push origin main --tags
 ```
 

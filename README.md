@@ -8,7 +8,7 @@ A fully-typed, validated TypeScript SDK for the [Jules AI API](https://developer
 
 This SDK provides runtime validation using Zod and full type safety for all Jules API endpoints.
 
-**SDK Version:** 2025.10.2 (based on Jules API last updated 2025-10-02 UTC)
+**SDK Version:** 1.0.0 (implementing Jules API v1alpha, last updated 2025-10-02 UTC)
 
 ## Installation
 
