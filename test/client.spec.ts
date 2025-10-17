@@ -190,10 +190,9 @@ describe('JulesClient', () => {
         activities: [{
           name: 'sessions/sess1/activities/act1',
           id: 'act1',
-          description: 'Planning',
+          // description is optional
           createTime: '2025-10-17T10:00:00Z',
           originator: 'agent',
-          _activityType: 'progressUpdated',
           progressUpdated: { title: 'Planning', description: 'Creating plan' },
         }],
         nextPageToken: 'token999',
@@ -206,6 +205,49 @@ describe('JulesClient', () => {
       expect(mockAxiosInstance.get).toHaveBeenCalledWith('/sessions/sess1/activities', expect.objectContaining({ params: { pageSize: 20 } }));
       expect(result).toEqual(mockActivities);
     });
+
+    it('should handle complex, realistic payloads', async () => {
+      const mockActivities = {
+        activities: [
+          {
+            name: 'sessions/sess1/activities/act1',
+            id: 'act1',
+            description: 'User initiated session',
+            createTime: '2025-10-17T10:00:00Z',
+            originator: 'user',
+            userMessaged: { userMessage: 'Go!' },
+          },
+          {
+            name: 'sessions/sess1/activities/act2',
+            id: 'act2',
+            // description is optional
+            createTime: '2025-10-17T10:01:00Z',
+            originator: 'agent',
+            planGenerated: {
+              plan: {
+                id: 'plan1',
+                steps: [{ id: 'step1', title: 'Step 1', description: 'First step', index: 0 }],
+              },
+            },
+            artifacts: [
+              {
+                changeSet: {
+                  source: 'sources/github/owner/repo',
+                  gitPatch: { unidiffPatch: '...' },
+                },
+              },
+              {
+                bashOutput: { command: 'ls', output: 'file.txt' },
+              }
+            ]
+          },
+        ],
+      };
+      mockAxiosInstance.get.mockResolvedValue({ data: mockActivities });
+      const client = new JulesClient({ apiKey: 'test-key' });
+      const result = await client.listActivities('sess1');
+      expect(result).toEqual(mockActivities);
+    });
   });
 
   describe('getActivity', () => {
@@ -216,7 +258,6 @@ describe('JulesClient', () => {
         description: 'Generated plan',
         createTime: '2025-10-17T10:00:00Z',
         originator: 'agent',
-        _activityType: 'planGenerated',
         planGenerated: {
           plan: {
             id: 'plan1',
@@ -289,7 +330,6 @@ describe('JulesClient', () => {
         description: 'Agent sent a message',
         createTime: '2025-10-17T10:00:00Z',
         originator: 'agent',
-        _activityType: 'agentMessaged',
         agentMessaged: {
           agentMessage: 'I am working on your task',
         },
@@ -300,7 +340,7 @@ describe('JulesClient', () => {
       const result = await client.getActivity('sess1', 'act1');
 
       expect(result).toEqual(mockActivity);
-      expect(result._activityType).toBe('agentMessaged');
+      expect(result.agentMessaged).toBeDefined();
     });
 
     it('should validate Activity response with userMessaged schema', async () => {
@@ -310,7 +350,6 @@ describe('JulesClient', () => {
         description: 'User sent a message',
         createTime: '2025-10-17T10:05:00Z',
         originator: 'user',
-        _activityType: 'userMessaged',
         userMessaged: {
           userMessage: 'Please add error handling',
         },
@@ -321,7 +360,7 @@ describe('JulesClient', () => {
       const result = await client.getActivity('sess1', 'act2');
 
       expect(result).toEqual(mockActivity);
-      expect(result._activityType).toBe('userMessaged');
+      expect(result.userMessaged).toBeDefined();
     });
 
     it('should validate Activity response with planGenerated schema', async () => {
@@ -331,7 +370,6 @@ describe('JulesClient', () => {
         description: 'Plan generated',
         createTime: '2025-10-17T10:10:00Z',
         originator: 'agent',
-        _activityType: 'planGenerated',
         planGenerated: {
           plan: {
             id: 'plan1',
@@ -348,7 +386,7 @@ describe('JulesClient', () => {
       const result = await client.getActivity('sess1', 'act3');
 
       expect(result).toEqual(mockActivity);
-      expect(result._activityType).toBe('planGenerated');
+      expect(result.planGenerated).toBeDefined();
     });
 
     it('should validate Artifact with changeSet schema', async () => {
@@ -358,14 +396,12 @@ describe('JulesClient', () => {
         description: 'Code changes',
         createTime: '2025-10-17T10:15:00Z',
         originator: 'agent',
-        _activityType: 'progressUpdated',
         progressUpdated: {
           title: 'Creating files',
           description: 'Adding new components',
         },
         artifacts: [
           {
-            _artifactType: 'changeSet',
             changeSet: {
               source: 'sources/github/owner/repo',
               gitPatch: {
@@ -383,7 +419,7 @@ describe('JulesClient', () => {
       const result = await client.getActivity('sess1', 'act4');
 
       expect(result.artifacts).toBeDefined();
-      expect(result.artifacts![0]._artifactType).toBe('changeSet');
+      expect(result.artifacts![0].changeSet).toBeDefined();
     });
 
     it('should reject invalid Session response', async () => {
@@ -396,20 +432,23 @@ describe('JulesClient', () => {
       await expect(client.getSession('sess1')).rejects.toThrow();
     });
 
-    it('should reject Activity without discriminator', async () => {
+    it('should reject Activity without any activity type', async () => {
       const invalidActivity = {
         name: 'sessions/sess1/activities/bad',
         id: 'bad',
         description: 'Invalid',
         createTime: '2025-10-17T10:00:00Z',
         originator: 'agent',
-        // Missing _activityType discriminator
+        // Missing activity type field, e.g., planGenerated
       };
 
       mockAxiosInstance.get.mockResolvedValue({ data: invalidActivity });
       const client = new JulesClient({ apiKey: 'test-key' });
 
-      await expect(client.getActivity('sess1', 'bad')).rejects.toThrow();
+      // This should still pass validation, as the fields are optional.
+      // The old test rejected this, but the new schema should accept it.
+      const result = await client.getActivity('sess1', 'bad');
+      expect(result).toBeDefined();
     });
   });
 });

@@ -26,21 +26,13 @@ export const MediaSchema = z.object({
   mimeType: z.string().optional(),
 });
 
-// Discriminated union for Artifact content
-export const ArtifactSchema = z.discriminatedUnion('_artifactType', [
-  z.object({
-    _artifactType: z.literal('changeSet'),
-    changeSet: ChangeSetSchema,
-  }),
-  z.object({
-    _artifactType: z.literal('media'),
-    media: MediaSchema,
-  }),
-  z.object({
-    _artifactType: z.literal('bashOutput'),
-    bashOutput: BashOutputSchema,
-  }),
-]);
+// A single artifact can contain one of several types of content.
+// In the API, these are represented by optional fields.
+export const ArtifactSchema = z.object({
+  changeSet: ChangeSetSchema.optional(),
+  media: MediaSchema.optional(),
+  bashOutput: BashOutputSchema.optional(),
+});
 
 // Plan step schema
 export const PlanStepSchema = z.object({
@@ -85,47 +77,28 @@ export const SessionFailedSchema = z.object({
   reason: z.string().optional(),
 });
 
-// Discriminated union for Activity types
-const ActivityUnionSchema = z.discriminatedUnion('_activityType', [
-  z.object({
-    _activityType: z.literal('agentMessaged'),
-    agentMessaged: AgentMessagedSchema,
-  }),
-  z.object({
-    _activityType: z.literal('userMessaged'),
-    userMessaged: UserMessagedSchema,
-  }),
-  z.object({
-    _activityType: z.literal('planGenerated'),
-    planGenerated: PlanGeneratedSchema,
-  }),
-  z.object({
-    _activityType: z.literal('planApproved'),
-    planApproved: PlanApprovedSchema,
-  }),
-  z.object({
-    _activityType: z.literal('progressUpdated'),
-    progressUpdated: ProgressUpdatedSchema,
-  }),
-  z.object({
-    _activityType: z.literal('sessionCompleted'),
-    sessionCompleted: SessionCompletedSchema,
-  }),
-  z.object({
-    _activityType: z.literal('sessionFailed'),
-    sessionFailed: SessionFailedSchema,
-  }),
-]);
+// An activity's content is determined by its type. In the API, this is
+// represented by a set of optional fields, where only one is expected to be
+// present.
+const ActivityContentSchema = z.object({
+  agentMessaged: AgentMessagedSchema.optional(),
+  userMessaged: UserMessagedSchema.optional(),
+  planGenerated: PlanGeneratedSchema.optional(),
+  planApproved: PlanApprovedSchema.optional(),
+  progressUpdated: ProgressUpdatedSchema.optional(),
+  sessionCompleted: SessionCompletedSchema.optional(),
+  sessionFailed: SessionFailedSchema.optional(),
+});
 
-// Complete Activity schema with required base fields and discriminated union
+// Complete Activity schema with required base fields and activity content
 export const ActivitySchema = z.object({
   name: z.string(),
   id: z.string(),
-  description: z.string(),
+  description: z.string().optional(),
   createTime: z.string(),
   originator: z.string(),
   artifacts: z.array(ArtifactSchema).optional(),
-}).and(ActivityUnionSchema);
+}).and(ActivityContentSchema);
 
 export const ListActivitiesResponseSchema = z.object({
   activities: z.array(ActivitySchema).optional(),
